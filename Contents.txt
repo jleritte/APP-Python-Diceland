@@ -1,0 +1,5 @@
+plains: 12
+forest: 9
+towns: 6
+hills: 6
+mounts: 3

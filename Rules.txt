@@ -1,0 +1,72 @@
+Setup
+- Board Size
+  - 8 min
+  - 36 Max
+- Layout
+  - Agreed Map
+  - Randomly built
+- Initial Occupy
+  - Roll all dice board size / 2 + 2
+  - Most 6's goes first
+    - Tie most 5's
+    - Still tie most 4's
+    - Still tie most 3's
+    - Still tie most 2's
+    - Still tie Re roll
+- Find First Player
+  - Highest total on remaining dice
+  - Tie First to Occupy
+Player Turn
+- Attack
+  - Success
+    - Target loses pips = to roll
+    - Attacker is replaced by roll
+    - Perfect roll = die
+    - Valid roll < die
+  - Fail
+    - Attacker loses 1 pip
+    - Failed roll > die
+  - Combo
+    - Roll 2 dice pick result
+    - Attackers must be adjacent to each other
+    - Attackers must be adjacent to target
+    - Can not choose to Fail
+  - Occupy
+    - If target is reduced to 0
+    - Attacker moves into hex
+    - Optional
+- Move
+  - 1 die can be moved
+  - Occupying die cannot move
+  - Can not move if adjacent to enemy
+Game End
+- 2 turns with no available attacks
+- Winner
+  - Player w/ most dice
+  - If tie, Player with largest pip value
+  - If tie, Player first
+Territories
+- Plains
+  - Normal
+- Hills
+  - Can not be Combo attacked
+- Towns
+  - Increase die 1 pip
+  - Must not have attacked
+  - Must not have moved
+  - Only one can be chosen per turn
+  - Can not go above die max
+- Mountains
+  - Same as Hills
+  - Can not be reoccupied
+- Forests
+  - Allows move away from Enemy
+Specials Rules
+- Fatal Attraction
+  - Player must move into contact with Opponent if Possible
+- Grouping
+  - Allows moving ally die into another
+  - Combines pip total
+  - Can not go above die max
+- Fill the Void
+  - Occupy is mandatory
