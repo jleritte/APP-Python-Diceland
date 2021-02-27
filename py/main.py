@@ -1,12 +1,15 @@
 from random import choice
-from math import sqrt,pi,cos,sin
 from turtle import *
+from hex_tile import *
 
 # dice_pools = []
 hex_map = {}
 # active_player = 0
-# board_size = 0
+board_size = 36
 selected = None
+offset = (0,0)
+outcolors = ['black','white','blue','purple1']
+colors = ['gray30','dark olive green','dark green','dim grey','firebrick','dark cyan','olive','forest green','light grey','red','cyan']
 
 # # Dice functions
 # def generate_dice(count = 6,size = 6):
@@ -40,66 +43,6 @@ selected = None
 #   return die
 
 
-# # Hex functions
-neighbors = [(1,0),(1,-1),(0,-1),(-1,0),(-1,1),(0,1)]
-scroll = (0,0)
-size = 800 / 15
-def tile_hash(coords):
-  q,r = coords
-  x,y = hex_to_pixel(coords)
-  return hash((q,-q-r,r,x,y))
-
-def get_neighbors(Hex = (0,0)):
-  (q1,r1) = Hex
-  return [(q1 + q2,r1 + r2) for (q2,r2) in neighbors]
-
-def pixel_to_hex_coord(point = (0,0)):
-  (x,y) = point
-  q = (sqrt(3)/3 * x - 1./3 * y) / size
-  r = (2./3 * y) / size
-  return round_hex_coord((q,r))
-
-def hex_to_pixel(Hex = (0,0)):
-    (q,r) = Hex
-    x = size * (sqrt(3) * q + sqrt(3)/2 * r)
-    y = size * (3./2 * r)
-    return (x, y)
-
-def round_hex_coord(Hex = (0,0)):
-  (x,z) = Hex
-  rx = round(x)
-  ry = round(-x-z)
-  rz = round(z)
-
-  x_dif = abs(rx - x)
-  y_dif = abs(ry - x-z)
-  z_dif = abs(rz - z)
-
-  if x_dif > y_dif and x_dif > z_dif:
-    rx = -ry-rz
-  elif y_dif > z_dif:
-    ry = -rx-rz
-  else:
-    rz = -rx-ry
-
-  return (rx,rz)
-
-def add_hex_to_map(hex_coords = (0,0),terrain = 0):
-  x,z = hex_coords
-  hex_hash = tile_hash(hex_coords)
-  if not hex_map.get(hex_hash,None):
-    hex_map[hex_hash] = (hex_coords,terrain)
-    return True
-  return False
-
-def select_hex_tile(x,y):
-  global selected
-  hex_coords = pixel_to_hex_coord((x,y))
-  hex_tile = hex_map.get(tile_hash(hex_coords),None)
-  if hex_tile:
-    selected = hex_tile
-    draw_map()
-
 
 # # Game State functions
 # def set_board_size(num = 8):
@@ -112,82 +55,172 @@ def select_hex_tile(x,y):
 wn = Screen()
 wn.title("Diceland")
 wn.setup(width=800,height=800)
+# wn.bgcolor('gray30')
+wn.screensize(400,400)
 wn.tracer(0)
 
-def create_hex_shape():
-  corners = [flat_hex_corner(x) for x in range(6)]
-  wn.register_shape("hexagon",tuple(corners))
+wn.register_shape("hexagon",tuple([hex_corner(x) for x in range(6)]))
 
-def flat_hex_corner(i):
-  angle_deg = 60 * i
-  angle_rad = pi / 180 * angle_deg
-  return (size * cos(angle_rad),size * sin(angle_rad))
+def add_hex_to_map(hex_coords = (0,0),terrain = 0):
+  hex_hash = tile_hash(hex_coords)
+  if not hex_map.get(hex_hash,None):
+    hex_map[hex_hash] = [hex_coords,terrain]
+    return True
+  return False
 
-outcolors = ['black','white','blue','purple1']
-colors = ['gray30','dark olive green','dark green','dim grey','firebrick','dark cyan','olive','forest green','light grey','red','cyan']
-
-def add_hexagon(pos = (0,0),ci = 0,out = 0):
-  (x,y) = hex_to_pixel(pos)
-  temp = Turtle()
+def create_hex():
+  temp = Turtle("hexagon")
   temp.speed(0)
-  temp.shape("hexagon")
   temp.penup()
-  temp.goto(x,y)
   temp.shapesize(outline=2)
-  temp.onclick(select_hex_tile)
-  temp.color(outcolors[out],colors[ci])
+  temp.ht()
+  return temp
+
+def create_box(shape=(1,1,0)):
+  w,l,o = shape
+  temp = Turtle("square")
+  temp.speed(0)
+  temp.penup()
+  temp.shapesize(w,l,o)
+  temp.ht()
+  return temp
+
+hex_stamp = create_hex()
+def draw():
+  hex_stamp.clearstamps()
+  hex_stamp.shapesize(1,1,2)
+  draw_background()
+  draw_map()
+  draw_hud()
+  wn.update()
+
+def stamp_screen(turt,pos=(0,0),color=(0,0),off=1):
+  oi, ci = color
+  ox,oy = offset
+  x, y = pos
+  if off:
+    x = x - ox
+    y = y - oy
+  turt.color(outcolors[oi],colors[ci])
+  turt.goto(x,y)
+  turt.stamp()
+
+def draw_background():
+  x,y = wn.screensize()
+  ox,oy = offset
+  grid = []
+  y_reset = y
+  while x > 0:
+    while y > 0:
+      grid.append(pixel_to_hex((x+ox,y+oy)))
+      grid.append(pixel_to_hex((x+ox,-y+oy)))
+      grid.append(pixel_to_hex((-x+ox,y+oy)))
+      grid.append(pixel_to_hex((-x+ox,-y+oy)))
+      y = y - hex_size
+    y = y_reset
+    x = x - hex_size
+  for h in grid:
+    x,y = hex_to_pixel(h)
+    stamp_screen(hex_stamp,pos=(x,y),color=(0,0))
 
 def draw_map():
   for pos,ci in hex_map.values():
-    add_hexagon(pos,ci)
+    stamp_screen(hex_stamp,pos=hex_to_pixel(pos),color=(0,ci))
+    if len(hex_map) < 36:
+      for n in get_hex_neighbors(pos):
+        tile = hex_map.get(tile_hash(n),None)
+        if not tile:
+          stamp_screen(hex_stamp,pos=hex_to_pixel(n),color=(2,0))
 
   if selected:
-    pos, ci = selected
-    for n in get_neighbors(pos):
-      th = tile_hash(n)
-      tile = hex_map.get(th,None)
+    pos,ci = selected
+    for n in get_hex_neighbors(pos):
+      tile = hex_map.get(tile_hash(n),None)
       if tile:
-        add_hexagon(n,tile[1],out=3)
-    add_hexagon(pos,ci+5,1)
-  wn.update()
+        p,ci = tile
+        stamp_screen(hex_stamp,pos=hex_to_pixel(p),color=(3,ci))
+    stamp_screen(hex_stamp,pos=hex_to_pixel(pos),color=(1,ci+5))
 
-ci = [36,24,15,9,3]
+selected_terrain = 'plains'
+terrain_tiles = {"plains": 12,"forest": 9,"towns": 6,"hills": 6,"mounts": 3}
+terrain_colors = ["plains","forest","towns","hills","mounts"]
+hud_stamp = create_box(shape=(8,8,2))
+def draw_hud():
+  y = 315
+  stamp_screen(hud_stamp,pos=(-315,y),color=(0,0),off=0)
+  y = 365
+  ci = 1
+  hci = None
+  for k,v in terrain_tiles.items():
+    hex_stamp.color(outcolors[0])
+    if k == selected_terrain:
+      hex_stamp.color(outcolors[1])
+      hci = ci + 5
+    hex_stamp.goto(-390,y)
+    hex_stamp.write(f"{k}",align="left",font=("Sans-serif",16,"normal"))
+    hex_stamp.goto(-270,y)
+    hex_stamp.write(f"{v}",align="right",font=("Sans-serif",16,"normal"))
+    hex_stamp.shapesize(0.25,0.25,2)
+    stamp_screen(hex_stamp,pos=(-250,y+15),color=(0,hci if hci else ci),off=0)
+    y = y - 32
+    ci = ci + 1
+    hci = None
+
 def click_handler(x,y):
-  for i in ci:
-    color = ci.index(i) if len(hex_map) < i else color
-  coords = pixel_to_hex_coord((x,y))
-  add_hex_to_map(coords,color+1)
-  for n in get_neighbors(coords):
-    add_hexagon(n,out=2)
-  if len(hex_map) > 35:
-    wn.onclick(None)
-    fill_empty_map()
-  draw_map()
+  if x <= -234 and y >= 233:
+    handle_hex_select(x,y)
+  else:
+    handle_hex_click(x,y)
+  draw()
 
-def fill_empty_map():
-  grid = []
-  x = 400
-  y = 400
-  while x > 0:
-    while y > 0:
-      grid.append(pixel_to_hex_coord((x,y)))
-      grid.append(pixel_to_hex_coord((x,-y)))
-      grid.append(pixel_to_hex_coord((-x,-y)))
-      grid.append(pixel_to_hex_coord((-x,y)))
-      y = y - 45
-    y = 400
-    x = x - 45
-  for h in grid:
-    add_hexagon(pos = h)
-  wn.update()
+def handle_hex_select(x,y):
+  global selected_terrain
+  if y >= 366:
+    selected_terrain = 'plains'
+  elif y >= 339:
+    selected_terrain = 'forest'
+  elif y >= 305:
+    selected_terrain = 'towns'
+  elif y >= 276:
+    selected_terrain = 'hills'
+  else:
+    selected_terrain = 'mounts'
+
+def handle_hex_click(x,y):
+  global selected
+  ox,oy = offset
+  coords = pixel_to_hex((x+ox,y+oy))
+  if hex_map.get(tile_hash(coords),None):
+    selected = hex_map[tile_hash(coords)]
+  elif len(hex_map) < board_size:
+    count = terrain_tiles[selected_terrain]
+    if count:
+      add_hex_to_map(coords,terrain_colors.index(selected_terrain)+1)
+      terrain_tiles[selected_terrain] = count - 1
+
+
+step = hex_size / 2
+def key_handlers(direction):
+  dy = step if direction == "Up" or direction == "Down" else 0
+  dx = step if direction == "Left" or direction == "Right" else 0
+  def funct():
+    global offset
+    x,y = offset
+    x = x + dx if direction == "Left" else x - dx
+    y = y - dy if direction == "Up" else y + dy
+    offset = (x,y)
+    draw()
+
+  return funct
+
+for n in ["Up","Down","Left","Right"]:
+  wn.onkeypress(key_handlers(n),n)
 
 wn.onclick(click_handler)
-create_hex_shape()
-fill_empty_map()
+wn.listen()
+draw()
 
 print(f'Welcome to Diceland')
+# print(dir(wn))
 
-
-# while True:
-#   wn.update()
 wn.mainloop()
