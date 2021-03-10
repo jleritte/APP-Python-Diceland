@@ -52,11 +52,12 @@ colors = ['gray30','dark olive green','dark green','dim grey','firebrick','dark 
 #     num = 8
 #   board_size = num
 
+standard_size = 800
+
 wn = Screen()
 wn.title("Diceland")
-wn.setup(width=800,height=800)
-# wn.bgcolor('gray30')
-wn.screensize(400,400)
+wn.setup(width=standard_size,height=standard_size)
+wn.screensize(standard_size/2,standard_size/2)
 wn.tracer(0)
 
 wn.register_shape("hexagon",tuple([hex_corner(x) for x in range(6)]))
