@@ -1,7 +1,9 @@
 from math import sqrt,pi,cos,sin
 
 neighbors = [(1,0),(1,-1),(0,-1),(-1,0),(-1,1),(0,1)]
-hex_size = 800 / 15.
+hex_size = 800 / 14
+hex_height = round(hex_size*2)
+hex_width = round(3**(1/2)*hex_size)
 def tile_hash(coords = (0,0)):
   q,r = coords
   x,y = hex_to_pixel(coords)
@@ -41,7 +43,8 @@ def round_hex_coord(Hex = (0,0)):
     rz = -rx-ry
 
   return (rx,rz)
-def hex_corner(i):
-  angle_deg = 60 * i
+def hex_corner(center,i,size=hex_size):
+  x,y = center
+  angle_deg = 60 * i -30
   angle_rad = pi / 180 * angle_deg
-  return (hex_size * cos(angle_rad),hex_size * sin(angle_rad))
+  return (round(x + size * cos(angle_rad)),round(y + size * sin(angle_rad)))
