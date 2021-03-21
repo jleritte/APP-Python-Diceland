@@ -1,10 +1,12 @@
+from animation import Animation as anim
 from types import SimpleNamespace as ns
 from gui import gui, terrain_colors
+from gui import white_hex_blink, slide_in
 # from random import choice
 from hex_tile import get_hex_neighbors, pixel_to_hex, hex_to_pixel, tile_hash
 
 # dice_pools = []
-data = ns(**{
+state = ns(**{
   "run": True,
   "hex_map": {},
   "valid": {},
@@ -13,11 +15,16 @@ data = ns(**{
   "active_player": 0,
   "board_size": 36,
   "terrain_tiles": {
-    "plains": 12, "forest": 9, "towns": 6,
-    "hills": 6, "mounts": 3
+    "plains": 12, "forest": 9, "towns": 6, "hills": 6, "mounts": 3
   },
   "selected_terrain": "plains"
 })
+ms_st = ns(**{
+  "but_1": 0,
+  "but_2": 0,
+  "last": (0, 0)
+})
+
 
 # # Dice functions
 # def generate_dice(count = 6,size = 6):
@@ -59,13 +66,11 @@ data = ns(**{
 #         num = 8
 #     board_size = num
 
-ui = gui()
-
 
 def add_hex_to_map(hex_coords=(0, 0), terrain=0):
   hex_hash = tile_hash(hex_coords)
-  if not data.hex_map.get(hex_hash, None):
-    data.hex_map[hex_hash] = [hex_coords, terrain]
+  if not state.hex_map.get(hex_hash, None):
+    state.hex_map[hex_hash] = [hex_coords, terrain]
     update_valid(hex_coords)
 
 
@@ -76,8 +81,8 @@ def update_valid(hex_coords=(0, 0)):
 
 def add_to_valid(hex_coords):
   n_hash = tile_hash(hex_coords)
-  if not data.hex_map.get(n_hash, None) or not data.valid.get(n_hash, None):
-    data.valid[n_hash] = hex_to_pixel(hex_coords)
+  if not state.hex_map.get(n_hash, None) or not state.valid.get(n_hash, None):
+    state.valid[n_hash] = hex_to_pixel(hex_coords)
 
 
 def click_handler(pos):
@@ -90,84 +95,82 @@ def click_handler(pos):
 
 def handle_hex_select(y):
   if y <= 31:
-    data.selected_terrain = 'plains'
+    state.selected_terrain = 'plains'
   elif y <= 63:
-    data.selected_terrain = 'forest'
+    state.selected_terrain = 'forest'
   elif y <= 95:
-    data.selected_terrain = 'towns'
+    state.selected_terrain = 'towns'
   elif y <= 127:
-    data.selected_terrain = 'hills'
+    state.selected_terrain = 'hills'
   else:
-    data.selected_terrain = 'mounts'
+    state.selected_terrain = 'mounts'
 
 
 def handle_hex_click(x, y):
-  terrain = data.selected_terrain
-  ox, oy = data.offset
+  terrain = state.selected_terrain
+  ox, oy = state.offset
   coords = pixel_to_hex((x+ox, y+oy))
   hex_hash = tile_hash(coords)
-  if data.hex_map.get(hex_hash, None):
-    data.selected = data.hex_map[tile_hash(coords)]
-  elif len(data.hex_map) == 0 or data.valid.get(hex_hash, None):
-    count = data.terrain_tiles[terrain]
+  if state.hex_map.get(hex_hash, None):
+    update_selected(hex_hash)
+  elif len(state.hex_map) == 0 or state.valid.get(hex_hash, None):
+    count = state.terrain_tiles[terrain]
     if count:
       add_hex_to_map(coords, terrain_colors[terrain])
-      data.terrain_tiles[terrain] = count - 1
-  if len(data.hex_map) == data.board_size:
-    data.valid = {}
+      state.terrain_tiles[terrain] = count - 1
+  if len(state.hex_map) == state.board_size:
+    state.valid = {}
 
 
-# def handle_key_press(event):
+def update_selected(hex_hash):
+  if state.selected is not None:
+    state.selected.kill()
+  blink_step = white_hex_blink(state.hex_map[hex_hash], state.hex_map)
+  blink = anim(1000, blink_step, 1)
+  state.selected = ui.add_animation(blink)
+
+# def on_key_press(event):
 #   print(dir(event),event.key)
 
-button_1 = 0
-button_2 = 0
 
-
-def handle_click(pos=(0, 0), button=1):
-  global button_1, button_2, last
+def on_click(pos=(0, 0), button=1):
   if button == 1:
-    button_1 = 1
+    ms_st.but_1 = 1
     click_handler(pos)
   if button == 3:
-    button_2 = 1
-    last = pos
+    ms_st.but_2 = 1
+    ms_st.last = pos
 
 
-def handle_release(pos=(0, 0), button=1):
-  global button_1, button_2
+def on_release(pos=(0, 0), button=1):
   if button == 1:
-    button_1 = 0
+    ms_st.but_1 = 0
   if button == 3:
-    button_2 = 0
+    ms_st.but_2 = 0
 
 
-last = (0, 0)
-
-
-def handle_drag(pos=(0, 0)):
-  global last
+def on_drag(pos=(0, 0)):
   x1, y1 = pos
-  x2, y2 = last
-  ox, oy = data.offset
-  data.offset = (ox+(x2-x1), oy+(y2-y1))
-  last = pos
+  x2, y2 = ms_st.last
+  ox, oy = state.offset
+  state.offset = (ox+(x2-x1), oy+(y2-y1))
+  ms_st.last = pos
 
 
 def end_game(event):
-  data.run = False
+  state.run = False
 
 
-ui.listen("MouseButtonDown", lambda e: handle_click(e.pos, e.button))
-ui.listen("MouseButtonUp", lambda e: handle_release(e.pos, e.button))
-ui.listen("MouseMotion", lambda e: handle_drag(e.pos) if button_2 else None)
-ui.listen("Quit", end_game)
-
-
+ui = gui()
 def main():
   print('Welcome to Diceland')
-  while data.run:
-    ui.update(data)
+  ui.listen("MouseButtonDown", lambda e: on_click(e.pos, e.button))
+  ui.listen("MouseButtonUp", lambda e: on_release(e.pos, e.button))
+  ui.listen("MouseMotion", lambda e: on_drag(e.pos) if ms_st.but_2 else None)
+  ui.listen("Quit", end_game)
+  ui.add_animation(anim(1000, slide_in(pos=(5, 5), size=(160, 160)), 1))
+  while state.run:
+    ui.update(state)
 
 
 main()
