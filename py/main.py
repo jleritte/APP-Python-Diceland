@@ -1,7 +1,7 @@
 from animation import Animation as anim
+from animation import white_hex_blink, grow, shrink, slide_out
 from types import SimpleNamespace as ns
 from gui import gui, terrain_colors
-from gui import white_hex_blink, slide_in
 # from random import choice
 from hex_tile import get_hex_neighbors, pixel_to_hex, hex_to_pixel, tile_hash
 
@@ -168,7 +168,12 @@ def main():
   ui.listen("MouseButtonUp", lambda e: on_release(e.pos, e.button))
   ui.listen("MouseMotion", lambda e: on_drag(e.pos) if ms_st.but_2 else None)
   ui.listen("Quit", end_game)
-  ui.add_animation(anim(1000, slide_in(pos=(5, 5), size=(160, 160)), 1))
+  ui.add_animation(anim(2000, grow(pos=(5, 5), size=(150, 300)), 1))
+  ui.add_animation(anim(500, shrink(pos=(495, 495), size=(300, 150)), 1))
+  ui.add_animation(anim(1000, slide_out(pos=(250, 240), size=(300, 150), drtn=0,ss=ui.size()), 1))
+  ui.add_animation(anim(1000, slide_out(pos=(240, 250), size=(300, 150), drtn=1,ss=ui.size()), 1))
+  ui.add_animation(anim(1000, slide_out(pos=(250, 260), size=(300, 150), drtn=2,ss=ui.size()), 1))
+  ui.add_animation(anim(1000, slide_out(pos=(260, 250), size=(300, 150), drtn=3,ss=ui.size()), 1))
   while state.run:
     ui.update(state)
 

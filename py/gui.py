@@ -2,7 +2,7 @@ import colors as c
 import pygame as pg
 from pygame.locals import SRCALPHA, RESIZABLE
 from hex_tile import hex_width, hex_height, hex_size, hex_corner
-from hex_tile import hex_to_pixel, pixel_to_hex, get_hex_neighbors, tile_hash
+from hex_tile import hex_to_pixel, pixel_to_hex
 
 stp_size = (hex_width+4, hex_height+4)
 stp_center = (stp_size[0]/2,stp_size[1]/2)
@@ -37,6 +37,9 @@ class gui:
 
   def listen(slf, event, handler):
     handlers.update({event: handler})
+
+  def size(slf):
+    return screen.get_size()
 
   def __emit(slf, event, *rest):
     for name, cb in handlers.items():
@@ -93,7 +96,7 @@ class gui:
     animations.append(animation)
 
   def __remove_animation(slf, animation):
-    anim_index = animations.index()
+    anim_index = animations.index(animation)
     del animations[anim_index]
 
   def __animate(slf, animation, ms):
@@ -125,45 +128,3 @@ def draw_hex(pos=(0, 0), color=c.GREY, bc=c.BLACK, small=0, off=(0, 0)):
   pg.draw.polygon(hex_stamp, color, hex_corners)
   pg.draw.polygon(hex_stamp, bc, hex_corners, 2)
   screen.blit(hex_stamp, pos)
-
-
-def white_hex_blink(selected, hex_map):
-  hex_blink_step = 40
-  blink_dir = 0.75
-
-  def step(ms, off=(0, 0)):
-    nonlocal hex_blink_step, blink_dir
-    r, g, b = c.WHITE
-    pos, ci = selected
-    for n in get_hex_neighbors(pos):
-      tile = hex_map.get(tile_hash(n), None)
-      if tile:
-        p, ci = tile
-        coords = hex_to_pixel(p)
-        bc = c.PURPLE
-        draw_hex(coords, color=ci, bc=bc, off=off)
-    coords = hex_to_pixel(pos)
-    highlight = (r, g, b, hex_blink_step)
-    bc = c.YELLOW
-    draw_hex(coords, color=highlight, bc=bc, off=off)
-    if hex_blink_step > 180 or hex_blink_step < 40:
-      blink_dir *= -1
-    hex_blink_step += ms * blink_dir
-
-  return step
-
-
-def slide_in(pos=(0, 0),size=(0, 0)):
-  x1 = 0 - size[0]
-  x2 = pos[0]
-  y = pos[1]
-
-  def step(ms, off=(0, 0)):
-    nonlocal x1
-    if x1 < x2:
-      x1 += ms
-    if x1 > x2:
-      x1 = x2
-    draw_box((x1, y), size)
-
-  return step
