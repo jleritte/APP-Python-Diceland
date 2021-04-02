@@ -2,7 +2,7 @@ import colors as c
 import pygame as pg
 from pygame.locals import SRCALPHA, RESIZABLE
 from hex_tile import hex_width, hex_height, hex_size, hex_corner
-from hex_tile import hex_to_pixel, pixel_to_hex
+from hex_tile import hex_to_pixel, pixel_to_hex, get_hex_neighbors, tile_hash
 
 stp_size = (hex_width+4, hex_height+4)
 stp_center = (stp_size[0]/2,stp_size[1]/2)
@@ -74,6 +74,18 @@ class gui:
   def __draw_map(slf, ms, hex_map, selected):
     for pos, ci in hex_map.values():
       draw_hex(hex_to_pixel(pos), color=ci, off=slf.offset)
+    if selected:
+      pos, ci, f = selected
+      slf.__highlight_neighbors(pos, hex_map)
+
+  def __highlight_neighbors(slf, coords, h_map):
+    for n in get_hex_neighbors(coords):
+      tile = h_map.get(tile_hash(n), None)
+      if tile:
+        p, ci = tile
+        coords = hex_to_pixel(p)
+        bc = c.PURPLE
+        draw_hex(coords, color=ci, bc=bc, off=slf.offset)
 
   def __draw_hud(slf, terrain_tiles, selected):
     r, g, b = c.WHITE

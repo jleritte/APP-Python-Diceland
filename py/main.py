@@ -1,5 +1,5 @@
-from animation import Animation as anim
-from animation import white_hex_blink, grow, shrink, slide_out, slide_in
+from animations import white_hex_blink, grow, shrink, slide_out, slide_in
+from animations import directions as dirs
 from types import SimpleNamespace as ns
 from gui import gui, terrain_colors
 # from random import choice
@@ -125,9 +125,8 @@ def handle_hex_click(x, y):
 def update_selected(hex_hash):
   if state.selected is not None:
     state.selected[2].kill()
-  blink_step = white_hex_blink(state.hex_map[hex_hash])
   p, c = state.hex_map[hex_hash]
-  blink = anim(200, blink_step, 1)
+  blink = white_hex_blink(state.hex_map[hex_hash])
   state.selected = (p, c, blink)
   ui.add_animation(blink)
 
@@ -170,19 +169,19 @@ def main():
   ui.listen("MouseButtonUp", lambda e: on_release(e.pos, e.button))
   ui.listen("MouseMotion", lambda e: on_drag(e.pos) if ms_st.but_2 else None)
   ui.listen("Quit", end_game)
-  ui.add_animation(anim(500, white_hex_blink(((6,1),(0,0,0))),1))
-  ui.add_animation(anim(500, white_hex_blink(((6,2),(0,0,0))),2))
-  # ui.add_animation(anim(500, white_hex_blink(((5,3),(0,0,0))),stick=1))
-  ui.add_animation(anim(1000, grow(pos=(5, 5), size=(150, 300)), stick=1))
-  ui.add_animation(anim(1000, shrink(pos=(495, 495), size=(300, 150))))
-  ui.add_animation(anim(1000, slide_out(pos=(230, 240), size=(300, 150), drtn=0)))
-  ui.add_animation(anim(1000, slide_out(pos=(240, 250), size=(300, 150), drtn=1)))
-  ui.add_animation(anim(1000, slide_out(pos=(250, 260), size=(300, 150), drtn=2,ss=ui.size())))
-  ui.add_animation(anim(1000, slide_out(pos=(260, 270), size=(300, 150), drtn=3,ss=ui.size())))
-  ui.add_animation(anim(1000, slide_in(pos=(230, 240), size=(300, 150), drtn=0), stick=1))
-  ui.add_animation(anim(1000, slide_in(pos=(240, 250), size=(300, 150), drtn=1), stick=1))
-  ui.add_animation(anim(1000, slide_in(pos=(250, 260), size=(300, 150), drtn=2,ss=ui.size()), stick=1))
-  ui.add_animation(anim(1000, slide_in(pos=(260, 270), size=(300, 150), drtn=3,ss=ui.size()), stick=1))
+  ui.add_animation(white_hex_blink(((6,1),(0,0,0)),loop=1,ms=500))
+  ui.add_animation(white_hex_blink(((6,2),(0,0,0)),ms=500))
+  ui.add_animation(white_hex_blink(((5,3),(0,0,0)),ms=1000))
+  ui.add_animation(grow((5, 5), (150, 300)))
+  ui.add_animation(shrink((495, 495), (300, 150)))
+  ui.add_animation(slide_out((230, 240), (300, 150), dirs.TOP))
+  ui.add_animation(slide_out((240, 250), (300, 150), dirs.LEFT))
+  ui.add_animation(slide_out((250, 260), (300, 150), dirs.BOTTOM, ss=ui.size()))
+  ui.add_animation(slide_out((260, 270), (300, 150), dirs.RIGHT, ss=ui.size()))
+  ui.add_animation(slide_in((230, 240), (300, 150), dirs.TOP))
+  ui.add_animation(slide_in((240, 250), (300, 150), dirs.LEFT))
+  ui.add_animation(slide_in((250, 260), (300, 150), dirs.BOTTOM,ss=ui.size()))
+  ui.add_animation(slide_in((260, 270), (300, 150), dirs.RIGHT,ss=ui.size()))
   while state.run:
     ui.update(state)
 
