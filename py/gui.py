@@ -8,7 +8,7 @@ stp_size = (hex_width+4, hex_height+4)
 stp_center = (stp_size[0]/2,stp_size[1]/2)
 corners = [hex_corner(stp_center, i) for i in range(6)]
 corners_small = [hex_corner(stp_center, i, hex_size*0.2) for i in range(6)]
-screen = None
+screen = pg.display.set_mode((800, 800), flags=RESIZABLE)
 hex_stamp = pg.Surface(stp_size, SRCALPHA)
 clock = pg.time.Clock()
 Δ_time = int((1/60)*1000)
@@ -25,7 +25,6 @@ class gui:
   def __init__(slf):
     global screen
     pg.init()
-    screen = pg.display.set_mode((800, 800), flags=RESIZABLE)
     pg.display.set_caption("Diceland")
 
   def update(slf, data):

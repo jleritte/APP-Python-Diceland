@@ -2,7 +2,7 @@ import colors as c
 from types import SimpleNamespace as ns
 from animation import Animation as anim
 from hex_tile import hex_to_pixel
-from gui import draw_box, draw_hex, draw_text
+from gui import draw_box, draw_hex, draw_text, screen
 
 directions = ns(**{
   "TOP":0,
@@ -24,7 +24,8 @@ def white_hex_blink(selected, loop=2, ms=200):
   return anim(ms, step, loop)
 
 
-def slide_in(pos, size, drtn, ss=(50, 50), ms=1000):
+def slide_in(pos, size, drtn, ms=1000):
+  ss = screen.get_size()
   x1, y1 = [(0 - l) if drtn < 2 else (sl + l) for l,sl in zip(size,ss)]
   Δx, Δy = [(a - b) for a, b in zip(pos,(x1, y1))]
   x2, y2 = pos
@@ -38,7 +39,8 @@ def slide_in(pos, size, drtn, ss=(50, 50), ms=1000):
   return anim(ms, step, stick=1)
 
 
-def slide_out(pos, size, drtn, ss=(50, 50), ms=1000):
+def slide_out(pos, size, drtn, ms=1000):
+  ss = screen.get_size()
   end = [(0 - l) if drtn < 2 else (sl + l) for l,sl in zip(size,ss)]
   Δx, Δy = [(b - a) for a, b in zip(pos,end)]
   x2, y2 = pos
